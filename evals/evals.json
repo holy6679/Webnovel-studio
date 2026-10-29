@@ -1,0 +1,87 @@
+{
+  "skill_name": "webnovel-studio",
+  "version": "1.0.0",
+  "description": "全流程中文网文创作 Skill 的自动化评测集",
+  "evals": [
+    {
+      "id": "wms-001",
+      "category": "能力④ 去AI味+AIGC扫描",
+      "input": "在目标文本中混入变体 '内容由AI生成'、'AIGC'、'ContentProducer'、'仅供参考'",
+      "expected": "scan_ai_traces.py 检出全部 4 类变体，退出码 1，禁止交付",
+      "script": "scripts/scan_ai_traces.py",
+      "pass_criteria": "退出码=1 且命中数>=4"
+    },
+    {
+      "id": "wms-002",
+      "category": "能力④ 去AI味+AIGC扫描",
+      "input": "干净文本不含任何 AI 痕迹变体",
+      "expected": "scan_ai_traces.py 零残留，退出码 0，可交付",
+      "script": "scripts/scan_ai_traces.py",
+      "pass_criteria": "退出码=0 且命中数=0"
+    },
+    {
+      "id": "wms-003",
+      "category": "能力④ 去AI味",
+      "input": "文本包含 '他缓缓地站了起来'、'空气中弥漫着一种说不出的气氛'、'显而易见'",
+      "expected": "deai_rules.py 命中 万能副词/抽象概括句/生硬书面语 三类",
+      "script": "scripts/deai_rules.py",
+      "pass_criteria": "退出码=1 且至少命中 3 个类别"
+    },
+    {
+      "id": "wms-004",
+      "category": "能力③ 长篇写作一致性",
+      "input": "书目录缺 ch_002.md，伏笔台账存在埋设超 50 章条目",
+      "expected": "check_consistency.py 报章节缺失错误与伏笔烂尾错误，退出码 1",
+      "script": "scripts/check_consistency.py",
+      "pass_criteria": "退出码=1 且错误数>=2"
+    },
+    {
+      "id": "wms-005",
+      "category": "能力③ 长篇写作一致性",
+      "input": "章节编号连续、伏笔台账健康、有 world.md 与 characters.md",
+      "expected": "check_consistency.py 0 错误通过",
+      "script": "scripts/check_consistency.py",
+      "pass_criteria": "退出码=0"
+    },
+    {
+      "id": "wms-006",
+      "category": "能力③ 写作节奏",
+      "input": "章节 800 字且结尾无钩子词",
+      "expected": "wordcount_check.py 报字数不足与钩子缺失",
+      "script": "scripts/wordcount_check.py",
+      "pass_criteria": "退出码=1 且同时含 字数不足、钩子 两类提示"
+    },
+    {
+      "id": "wms-007",
+      "category": "能力①② 扫榜拆文/设定大纲",
+      "input": "user 发起'扫番茄榜单选题开新书'",
+      "expected": "Agent 依 workflow.md Phase1-2 输出 benchmark.md，再走三层问答产出 book.md 与 outline.md",
+      "script": "references/workflow.md",
+      "pass_criteria": "产物文件存在且含对应模板结构（人工验收）"
+    },
+    {
+      "id": "wms-008",
+      "category": "能力⑤ 多视角审稿+自动校验",
+      "input": "user 要求对某章审稿重写",
+      "expected": "产出 reviews/review_<章>.md 三视角 Top3，重写后跑全部门禁脚本",
+      "script": "references/review-validation.md",
+      "pass_criteria": "审稿文件存在 + 门禁全绿（人工验收）"
+    },
+    {
+      "id": "wms-009",
+      "category": "能力④ 清理-重扫强制闭环（文本）",
+      "input": "dirty.md 含 '内容由AI生成，仅供参考' 尾注行与 'AIGC' 标注行；正文保留",
+      "expected": "clean_ai_traces.py 删除全部标注行，清理后自动重扫 0 残留，退出码 0",
+      "script": "scripts/clean_ai_traces.py",
+      "pass_criteria": "退出码=0 且 重扫命中=0 且 正文行未被误删"
+    },
+    {
+      "id": "wms-010",
+      "category": "能力④ 清理-重扫强制闭环（docx）",
+      "input": "dirty.docx 的 word/document.xml 含仅标注文本的 <w:t> 节点与无正文的段落",
+      "expected": "clean_ai_traces.py 解包删除标注节点与空段，重打包后重扫 0 残留，退出码 0",
+      "script": "scripts/clean_ai_traces.py",
+      "pass_criteria": "退出码=0 且 重扫命中=0 且 正文 <w:t> 保留"
+    }
+  ]
+}
